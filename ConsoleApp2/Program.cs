@@ -5,14 +5,40 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Xml.Serialization;
+using System.Threading;
 
 class Program
 {
     static List<User> users = new List<User>();
-    static string filename = "users.txt";
+    static bool isChanged = false;
+    private static Timer? autosaveTimer;
+
+    static void AutoSave(object state)
+    {
+        if(isChanged == true)
+        {
+            SaveUsersToFile();
+            //Console.WriteLine("Auto saved successfully!\n");
+        }
+        //else
+        //{
+        //    Console.WriteLine("There is nothing to change!\n");
+        //}
+    }
 
     static void Main()
     {
+        try
+        {
+            var autoEvent = new AutoResetEvent(false);
+            autosaveTimer = new Timer(AutoSave, autoEvent, 0, 10000);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
+        
+
         LoadUsersFromFile();
 
         while (true)
@@ -28,7 +54,6 @@ class Program
 
             Console.Write("Select an option: ");
             string choice = Console.ReadLine();
-
             
             switch (choice)
             {
@@ -68,7 +93,8 @@ class Program
                     Console.Clear();
                     break;
                 default:
-                    Console.WriteLine("Invalid option. Please try again.");
+                    Console.Clear();
+                    Console.WriteLine("Invalid option. Please try again.\n");
                     break;
             }
         }
@@ -117,10 +143,6 @@ class Program
                         {
                             newUser.Email = email;
                         }
-                        else
-                        {
-
-                        }
                     } while (!Regex.IsMatch(email, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"));
                 }
                 break;
@@ -142,6 +164,7 @@ class Program
         }
 
         users.Add(newUser);
+        isChanged = true;
 
         Console.Clear();
         Console.WriteLine("User added successfully.\n");
@@ -198,6 +221,8 @@ class Program
         if (userToDelete != null)
         {
             users.Remove(userToDelete);
+            isChanged = true;
+
             Console.Clear();
             Console.WriteLine("User deleted successfully.\n");
         }
@@ -239,6 +264,7 @@ class Program
                     }
                 } while (isNull);
             }
+            isChanged = true;
 
             Console.Clear();
             Console.WriteLine("User updated successfully.\n");
@@ -258,6 +284,7 @@ class Program
             using (Stream stream = File.Create("Users.xml"))
             {
                 xmlSerializer.Serialize(stream, users);
+                isChanged = false;
             }
         }
         catch (Exception ex)
@@ -291,7 +318,7 @@ class Program
     }
 }
 
-class User
+public class User
 {
     public string Name { get; set; }
     public string Email { get; set; }
@@ -307,7 +334,3 @@ class User
         Email = email;
     }
 }
-
-
-
-
