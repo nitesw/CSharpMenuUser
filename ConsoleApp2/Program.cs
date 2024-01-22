@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 
 class Program
 {
@@ -251,35 +252,41 @@ class Program
 
     static void SaveUsersToFile()
     {
-        using (StreamWriter writer = new StreamWriter(filename))
+        XmlSerializer xmlSerializer = new XmlSerializer(typeof(List<User>));
+        try
         {
-            foreach (var user in users)
+            using (Stream stream = File.Create("Users.xml"))
             {
-                writer.WriteLine($"{user.Name},{user.Email}");
+                xmlSerializer.Serialize(stream, users);
             }
         }
-
-        Console.WriteLine("Users saved to file successfully.\n");
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message + "\n");
+        }
     }
 
     static void LoadUsersFromFile()
     {
-        if (File.Exists(filename))
+        XmlSerializer xmlSerializer = new XmlSerializer(typeof(List<User>));
+        try
         {
-            string[] lines = File.ReadAllLines(filename);
-
-            foreach (var line in lines)
+            if (File.Exists("Users.xml"))
             {
-                string[] parts = line.Split(',');
-                if (parts.Length == 2)
+                using (Stream stream = File.OpenRead("Users.xml"))
                 {
-                    string name = parts[0];
-                    string email = parts[1];
-
-                    User loadedUser = new User(name, email);
-                    users.Add(loadedUser);
+                    List<User> newUsers = (List<User>)xmlSerializer.Deserialize(stream);
+                    users = newUsers;
                 }
             }
+            else
+            {
+                SaveUsersToFile();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message + "\n");
         }
     }
 }
