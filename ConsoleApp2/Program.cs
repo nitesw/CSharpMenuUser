@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 class Program
 {
@@ -31,26 +33,38 @@ class Program
             {
                 
                 case "1":
+                    Console.Clear();
+                    Console.WriteLine("Adding new user\n");
                     AddNewUser();
                     break;
                 case "2":
+                    Console.Clear();
                     ShowAllUsers();
                     break;
                 case "3":
+                    Console.Clear();
                     ShowUserByNameOrEmail();
                     break;
                 case "4":
+                    Console.Clear();
+                    Console.WriteLine("Deleting user\n");
                     DeleteUser();
                     break;
                 case "5":
+                    Console.Clear();
+                    Console.WriteLine("Updating user\n");
                     UpdateUser();
                     break;
                 case "6":
+                    Console.Clear();
                     SaveUsersToFile();
+                    Console.Clear();
                     break;
                 case "7":
+                    Console.Clear();
                     SaveUsersToFile();
                     Environment.Exit(0);
+                    Console.Clear();
                     break;
                 default:
                     Console.WriteLine("Invalid option. Please try again.");
@@ -61,31 +75,92 @@ class Program
 
     static void AddNewUser()
     {
+        User newUser = new User();
+
         Console.Write("Enter user name: ");
         string name = Console.ReadLine();
+        if(!string.IsNullOrWhiteSpace(name))
+        {
+            newUser.Name = name;
+        }
+        else
+        {
+            bool isNull = true;
+            do
+            {
+                Console.WriteLine("Enter proper name!\n");
+                Console.Write("Enter user name: ");
+                name = Console.ReadLine();
+                if (!string.IsNullOrWhiteSpace(name))
+                {
+                    newUser.Name = name;
+                    isNull = false;
+                }
+            } while (isNull);
+        }
 
         Console.Write("Enter user email: ");
         string email = Console.ReadLine();
+        if(Regex.IsMatch(email, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"))
+        {
+            foreach (var user in users)
+            {
+                if(user.Email == email)
+                {
+                    do
+                    {
+                        Console.WriteLine("Enter proper or unique email!\n");
+                        Console.Write("Enter user email: ");
+                        email = Console.ReadLine();
+                        if(Regex.IsMatch(email, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"))
+                        {
+                            newUser.Email = email;
+                        }
+                        else
+                        {
 
-        User newUser = new User(name, email);
+                        }
+                    } while (!Regex.IsMatch(email, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"));
+                }
+                break;
+            }
+            newUser.Email = email;
+        }
+        else
+        {
+            do
+            {
+                Console.WriteLine("Enter proper or unique email!\n");
+                Console.Write("Enter user email: ");
+                email = Console.ReadLine();
+                if (Regex.IsMatch(email, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"))
+                {
+                    newUser.Email = email;
+                }
+            } while (!Regex.IsMatch(email, @"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"));
+        }
+
         users.Add(newUser);
 
-        Console.WriteLine("User added successfully.");
+        Console.Clear();
+        Console.WriteLine("User added successfully.\n");
     }
 
     static void ShowAllUsers()
     {
         if (users.Count > 0)
         {
-            Console.WriteLine("All Users:");
+            Console.WriteLine("All Users:\n");
             foreach (var user in users)
             {
                 Console.WriteLine($"Name: {user.Name}, Email: {user.Email}");
             }
+            Console.WriteLine();
         }
         else
         {
-            Console.WriteLine("No users found.");
+            Console.Clear();
+            Console.WriteLine("No users found.\n");
         }
     }
 
@@ -98,15 +173,17 @@ class Program
 
         if (foundUsers.Count > 0)
         {
-            Console.WriteLine("Matching Users:");
+            Console.WriteLine("Matching Users:\n");
             foreach (var user in foundUsers)
             {
                 Console.WriteLine($"Name: {user.Name}, Email: {user.Email}");
             }
+            Console.WriteLine();
         }
         else
         {
-            Console.WriteLine("No matching users found.");
+            Console.Clear();
+            Console.WriteLine("No matching users found.\n");
         }
     }
 
@@ -120,11 +197,13 @@ class Program
         if (userToDelete != null)
         {
             users.Remove(userToDelete);
-            Console.WriteLine("User deleted successfully.");
+            Console.Clear();
+            Console.WriteLine("User deleted successfully.\n");
         }
         else
         {
-            Console.WriteLine("User not found.");
+            Console.Clear();
+            Console.WriteLine("User not found.\n");
         }
     }
 
@@ -139,13 +218,34 @@ class Program
         {
             Console.Write("Enter new user name: ");
             string newName = Console.ReadLine();
-            userToUpdate.Name = newName;
 
-            Console.WriteLine("User updated successfully.");
+            if (!string.IsNullOrWhiteSpace(newName))
+            {
+                userToUpdate.Name = newName;
+            }
+            else
+            {
+                bool isNull = true;
+                do
+                {
+                    Console.WriteLine("Enter proper name!\n");
+                    Console.Write("Enter new user name: ");
+                    newName = Console.ReadLine();
+                    if (!string.IsNullOrWhiteSpace(newName))
+                    {
+                        userToUpdate.Name = newName;
+                        isNull = false;
+                    }
+                } while (isNull);
+            }
+
+            Console.Clear();
+            Console.WriteLine("User updated successfully.\n");
         }
         else
         {
-            Console.WriteLine("User not found.");
+            Console.Clear();
+            Console.WriteLine("User not found.\n");
         }
     }
 
@@ -159,7 +259,7 @@ class Program
             }
         }
 
-        Console.WriteLine("Users saved to file successfully.");
+        Console.WriteLine("Users saved to file successfully.\n");
     }
 
     static void LoadUsersFromFile()
@@ -189,6 +289,11 @@ class User
     public string Name { get; set; }
     public string Email { get; set; }
 
+    public User()
+    {
+        Name = "";
+        Email = "";
+    }
     public User(string name, string email)
     {
         Name = name;
